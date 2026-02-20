@@ -1,13 +1,13 @@
 # 🌿 AI Plant Disease Detection
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![Flask](https://img.shields.io/badge/Flask-WebApp-black)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-AI-orange)
 
 An AI-powered web application that detects plant diseases from leaf images using deep learning.  
 Built with **Flask + TensorFlow**, this project demonstrates end-to-end machine learning deployment.
 
 ---
 #Model Download link:https://drive.google.com/file/d/1ioGCHoPyl3sdw16n7ODtWoQuq94wPtWw/view?usp=sharing
-![Python](https://img.shields.io/badge/Python-3.10-blue)
-![Flask](https://img.shields.io/badge/Flask-WebApp-black)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-AI-orange)
 ---
 <img width="1016" height="574" alt="image" src="https://github.com/user-attachments/assets/3cddcd1c-3393-4b2c-9e25-121c4d805cc3" />
 <img width="889" height="842" alt="image" src="https://github.com/user-attachments/assets/04d22f3b-6691-4ab7-b01d-4f65113b992d" />
