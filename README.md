@@ -2,6 +2,7 @@
 
 An AI-powered web application that detects plant diseases from leaf images using deep learning.  
 Built with **Flask + TensorFlow**, this project demonstrates end-to-end machine learning deployment.
+model link:https://drive.google.com/file/d/1ioGCHoPyl3sdw16n7ODtWoQuq94wPtWw/view?usp=sharing
 
 ---
 
