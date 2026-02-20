@@ -1,8 +1,0 @@
-tfenv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
-.DS_Store
-static/uploads/
