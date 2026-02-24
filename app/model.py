@@ -1,7 +1,6 @@
-import tensorflow as tf
 import numpy as np
 import json
-import os
+from keras.models import load_model
 
 model = None
 labels = None
@@ -10,15 +9,14 @@ def load_once():
     global model, labels
 
     if model is None:
-        print("🌿 Loading model...")
-
-        model = tf.keras.models.load_model("plant_model.h5", compile=False)
+        print("🌿 Loading model (legacy mode)...")
+        model = load_model("plant_model.h5", compile=False)
 
         with open("labels.json") as f:
             labels = json.load(f)
 
 
-def predict(arr: np.ndarray):
+def predict(arr):
     load_once()
 
     preds = model.predict(arr, verbose=0)[0]
