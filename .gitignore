@@ -1,6 +1,17 @@
-app.py
-templates/
-static/
-README.md
-.gitignore
-requirements.txt
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+env/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Streamlit cache (optional)
+.streamlit/
+
+# Logs
+*.log

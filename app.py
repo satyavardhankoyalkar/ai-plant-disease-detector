@@ -1,89 +1,111 @@
-import os
+import streamlit as st
 import numpy as np
-from flask import Flask, render_template, request
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-import gdown
+from PIL import Image
 
-app = Flask(__name__)
+st.set_page_config(
+    page_title="🌿 Plant Disease Detector",
+    page_icon="🌿",
+    layout="centered"
+)
 
-# =============================
-# MODEL DOWNLOAD FROM DRIVE
-# =============================
-MODEL_PATH = "plant_model.h5"
-DRIVE_ID = "1ioGCHoPyl3sdw16n7ODtWoQuq94wPtWw"
+CLASS_NAMES = {
+    0:  "Pepper Bell - Bacterial Spot",
+    1:  "Pepper Bell - Healthy",
+    2:  "Potato - Early Blight",
+    3:  "Potato - Late Blight",
+    4:  "Potato - Healthy",
+    5:  "Tomato - Bacterial Spot",
+    6:  "Tomato - Early Blight",
+    7:  "Tomato - Late Blight",
+    8:  "Tomato - Leaf Mold",
+    9:  "Tomato - Septoria Leaf Spot",
+    10: "Tomato - Spider Mites (Two Spotted)",
+    11: "Tomato - Target Spot",
+    12: "Tomato - Yellow Leaf Curl Virus",
+    13: "Tomato - Mosaic Virus",
+    14: "Tomato - Healthy",
+}
 
-if not os.path.exists(MODEL_PATH):
-    print("⬇️ Downloading model from Google Drive...")
-    url = f"https://drive.google.com/uc?id={DRIVE_ID}"
-    gdown.download(url, MODEL_PATH, quiet=False)
+@st.cache_resource
+def load_my_model():
+    return load_model("plant_model.h5")
 
-print("📦 Loading model...")
-model = load_model(MODEL_PATH, compile=False)
-print("✅ Model loaded successfully")
+model = load_my_model()
 
-# =============================
-# CLASS NAMES
-# =============================
-CLASS_NAMES = [
-    "Apple Scab","Apple Black Rot","Apple Cedar Rust","Apple Healthy",
-    "Blueberry Healthy","Cherry Powdery Mildew","Cherry Healthy",
-    "Corn Gray Leaf Spot","Corn Common Rust","Corn Healthy",
-    "Grape Black Rot","Grape Esca","Grape Leaf Blight","Grape Healthy",
-    "Orange Citrus Greening","Peach Bacterial Spot","Peach Healthy",
-    "Pepper Bacterial Spot","Pepper Healthy","Potato Early Blight",
-    "Potato Late Blight","Potato Healthy","Strawberry Leaf Scorch",
-    "Strawberry Healthy","Tomato Bacterial Spot","Tomato Early Blight",
-    "Tomato Late Blight","Tomato Leaf Mold","Tomato Septoria Leaf Spot",
-    "Tomato Spider Mites","Tomato Target Spot","Tomato Mosaic Virus",
-    "Tomato Yellow Leaf Curl Virus","Tomato Healthy"
-]
+def predict(img):
+    img = img.resize((224, 224))
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0) / 255.0
+    pred = model.predict(img_array)[0]
+    idx = int(np.argmax(pred))
+    confidence = float(pred[idx] * 100)
+    return idx, confidence, pred
 
-IMG_SIZE = 380
+# ── UI ───────────────────────────────────────────────────────────────────────
+st.title("🌿 AI Plant Disease Detector")
+st.markdown("Upload a **leaf image** of Tomato, Potato, or Pepper to detect disease.")
+st.divider()
 
-# =============================
-# ROUTES
-# =============================
-@app.route("/", methods=["GET", "POST"])
-def index():
-    prediction = None
-    confidence = None
-    img_path = None
-    error = None
+uploaded_file = st.file_uploader("📷 Upload Leaf Image", type=["jpg", "jpeg", "png"])
 
-    if request.method == "POST":
-        if "image" not in request.files:
-            error = "No file uploaded"
+if uploaded_file:
+    img = Image.open(uploaded_file).convert("RGB")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.image(img, caption="Uploaded Image", use_column_width=True)
+
+    with col2:
+        with st.spinner("🔍 Analyzing..."):
+            idx, confidence, probs = predict(img)
+
+        disease = CLASS_NAMES[idx]
+        is_healthy = "healthy" in disease.lower()
+        is_unknown = confidence < 70
+
+        st.markdown("### 🔬 Result")
+
+        if is_unknown:
+            st.warning("⚠️ Unknown / Unsupported Plant")
+            st.info("Please upload a Tomato, Potato, or Pepper leaf image.")
+        elif is_healthy:
+            st.success(f"✅ **{disease}**")
+            st.balloons()
         else:
-            file = request.files["image"]
+            st.error(f"⚠️ **{disease}**")
 
-            if file.filename == "":
-                error = "No file selected"
-            else:
-                upload_folder = "static/uploads"
-                os.makedirs(upload_folder, exist_ok=True)
+        st.markdown("### 📊 Confidence")
+        st.progress(int(confidence))
+        st.metric("Confidence Score", f"{confidence:.2f}%")
 
-                img_path = os.path.join(upload_folder, file.filename)
-                file.save(img_path)
+    st.divider()
 
-                try:
-                    img = image.load_img(img_path, target_size=(IMG_SIZE, IMG_SIZE))
-                    img_array = image.img_to_array(img) / 255.0
-                    img_array = np.expand_dims(img_array, axis=0)
+    with st.expander("📈 See all class probabilities"):
+        for i, p in enumerate(probs):
+            st.write(f"**{CLASS_NAMES[i]}** — {p*100:.2f}%")
+            st.progress(float(p))
 
-                    preds = model.predict(img_array)[0]
-                    class_index = np.argmax(preds)
-                    confidence = round(float(np.max(preds)) * 100, 2)
-                    prediction = CLASS_NAMES[class_index]
+else:
+    st.info("👆 Upload a leaf image to get started!")
+    st.markdown("### 🌱 Supported Plants & Diseases")
+    col1, col2, col3 = st.columns(3)
 
-                except Exception as e:
-                    error = f"Prediction error: {str(e)}"
+    with col1:
+        st.markdown("**🫑 Pepper Bell**")
+        st.markdown("- Bacterial Spot\n- Healthy")
 
-    return render_template(
-        "index.html",
-        prediction=prediction,
-        confidence=confidence,
-        img_path=img_path,
-        error=error
-    )
+    with col2:
+        st.markdown("**🥔 Potato**")
+        st.markdown("- Early Blight\n- Late Blight\n- Healthy")
 
+    with col3:
+        st.markdown("**🍅 Tomato**")
+        st.markdown("- Bacterial Spot\n- Early Blight\n- Late Blight\n- Leaf Mold\n- Septoria Leaf Spot\n- Spider Mites\n- Target Spot\n- Yellow Leaf Curl\n- Mosaic Virus\n- Healthy")
+
+st.divider()
+st.markdown(
+    "<center>Made by <b>Satya</b> 🌿 | MobileNetV2 + TensorFlow</center>",
+    unsafe_allow_html=True
+)
