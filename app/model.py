@@ -1,33 +1,26 @@
 import os
-import numpy as np
-from tensorflow.keras.models import load_model
+import json
+import tensorflow as tf
 
-model = None  # lazy global
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-def get_model():
-    global model
+MODEL_PATH = os.path.join(BASE_DIR, "plant_model.h5")
+LABEL_PATH = os.path.join(BASE_DIR, "labels.json")
+
+# Lazy load
+model = None
+labels = None
+
+def load():
+    global model, labels
     if model is None:
-        BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-        MODEL_PATH = os.path.join(BASE_DIR, "plant_model.h5")
-        model = load_model(MODEL_PATH)
-    return model
+        print("🔥 Loading model...")
+        model = tf.keras.models.load_model(MODEL_PATH)
+        labels = json.load(open(LABEL_PATH))
+        print("✅ Model loaded")
 
-
-def predict(image):
-    model = get_model()
-
-    image = image.resize((224, 224))
-    img = np.array(image) / 255.0
-    img = np.expand_dims(img, axis=0)
-
-    preds = model.predict(img)
-    idx = np.argmax(preds)
-
-    classes = [
-        "Tomato Early Blight",
-        "Tomato Late Blight",
-        "Tomato Healthy",
-        # add your labels here
-    ]
-
-    return classes[idx], float(np.max(preds))
+def predict(img_array):
+    load()
+    preds = model.predict(img_array)[0]
+    idx = preds.argmax()
+    return labels[idx], float(preds[idx] * 100)
