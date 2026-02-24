@@ -1,6 +1,6 @@
 import numpy as np
 import json
-import tensorflow as tf
+from tensorflow.keras.models import load_model
 
 model = None
 labels = None
@@ -8,8 +8,8 @@ labels = None
 def load_once():
     global model, labels
     if model is None:
-        print("🌿 Loading TF model...")
-        model = tf.keras.models.load_model("plant_model.h5", compile=False)
+        print("🌿 Loading model...")
+        model = load_model("plant_model.h5", compile=False)
 
         with open("labels.json") as f:
             labels = json.load(f)
