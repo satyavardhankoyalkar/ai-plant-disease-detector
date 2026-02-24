@@ -1,6 +1,8 @@
-import os
+
 import json
 import tensorflow as tf
+import os
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
