@@ -1,11 +1,7 @@
+import tensorflow as tf
+import numpy as np
 import json
 import os
-import numpy as np
-from PIL import Image
-import tensorflow as tf
-
-MODEL_PATH = "plant_model.h5"
-LABELS_PATH = "labels.json"
 
 model = None
 labels = None
@@ -15,22 +11,17 @@ def load_once():
 
     if model is None:
         print("🌿 Loading model...")
-        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
 
-    if labels is None:
-        with open(LABELS_PATH) as f:
+        model = tf.keras.models.load_model("plant_model.h5", compile=False)
+
+        with open("labels.json") as f:
             labels = json.load(f)
 
-def predict_image(image_bytes):
+
+def predict(arr: np.ndarray):
     load_once()
 
-    img = Image.open(image_bytes).convert("RGB")
-    img = img.resize((224, 224))
-    arr = np.array(img) / 255.0
-    arr = np.expand_dims(arr, axis=0)
-
-    preds = model.predict(arr)
+    preds = model.predict(arr, verbose=0)[0]
     idx = int(np.argmax(preds))
-    confidence = float(np.max(preds) * 100)
 
-    return labels[idx], confidence
+    return labels[idx], float(preds[idx] * 100)
