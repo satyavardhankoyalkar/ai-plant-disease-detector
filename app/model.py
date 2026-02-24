@@ -1,36 +1,20 @@
-import tensorflow as tf
+import os
 import numpy as np
-from PIL import Image
+from tensorflow.keras.models import load_model
 
-# Lazy load model (RAM safe)
-model = None
+model = None  # lazy global
 
-CLASS_NAMES = [
-    "Pepper__bell___Bacterial_spot",
-    "Pepper__bell___healthy",
-    "Potato___Early_blight",
-    "Potato___Late_blight",
-    "Potato___healthy",
-    "Tomato_Bacterial_spot",
-    "Tomato_Early_blight",
-    "Tomato_Late_blight",
-    "Tomato_Leaf_Mold",
-    "Tomato_Septoria_leaf_spot",
-    "Tomato_Spider_mites",
-    "Tomato_Target_Spot",
-    "Tomato_Yellow_Leaf_Curl_Virus",
-    "Tomato_mosaic_virus",
-    "Tomato_healthy"
-]
-
-def load_model():
+def get_model():
     global model
     if model is None:
-        model = tf.keras.models.load_model("plant_model.h5", compile=False)
+        BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+        MODEL_PATH = os.path.join(BASE_DIR, "plant_model.h5")
+        model = load_model(MODEL_PATH)
     return model
 
-def predict(image: Image.Image):
-    model = load_model()
+
+def predict(image):
+    model = get_model()
 
     image = image.resize((224, 224))
     img = np.array(image) / 255.0
@@ -39,4 +23,11 @@ def predict(image: Image.Image):
     preds = model.predict(img)
     idx = np.argmax(preds)
 
-    return CLASS_NAMES[idx], float(np.max(preds))
+    classes = [
+        "Tomato Early Blight",
+        "Tomato Late Blight",
+        "Tomato Healthy",
+        # add your labels here
+    ]
+
+    return classes[idx], float(np.max(preds))
